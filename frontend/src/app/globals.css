@@ -56,21 +56,21 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Subtle Card Glow / Shadows */
+/* Dynamic Card Styling using CSS Variables */
 .fin-card {
-  background-color: #0E1422;
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   border-radius: 14px;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .fin-card:hover {
-  border-color: rgba(255, 255, 255, 0.13);
+  border-color: var(--border-hover);
 }
 
 .fin-card-elevated {
-  background-color: #121828;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
   border-radius: 14px;
 }
 
@@ -82,4 +82,124 @@ body {
 
 .animate-fin-fade {
   animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ============================================================
+   DYNAMIC THEME PRESET ADAPTATION
+   ============================================================ */
+/* Seamlessly map hardcoded canvas backgrounds to active theme canvas */
+body,
+div[class*="bg-[#080B11]"],
+main[class*="bg-[#080B11]"],
+section[class*="bg-[#080B11]"] {
+  background-color: var(--bg-canvas) !important;
+}
+
+/* Seamlessly map sidebar background to active theme sidebar */
+aside[class*="bg-[#0B0F18]"],
+aside[class*="bg-[#070A10]"] {
+  background-color: var(--bg-sidebar) !important;
+}
+
+/* Theme accent dynamic overrides */
+.text-purple-400,
+.text-purple-300 {
+  color: var(--brand-primary) !important;
+}
+
+.bg-purple-600,
+.bg-purple-500 {
+  background-color: var(--brand-primary) !important;
+}
+
+.border-purple-500,
+.border-purple-600 {
+  border-color: var(--brand-primary) !important;
+}
+
+.bg-purple-500\/10,
+.bg-purple-500\/15,
+.bg-purple-500\/20,
+.bg-purple-600\/20 {
+  background-color: var(--brand-primary-subtle) !important;
+}
+
+.border-purple-500\/20,
+.border-purple-500\/30,
+.border-purple-500\/40 {
+  border-color: var(--brand-primary-subtle) !important;
+}
+
+/* Density scaling */
+[data-density="compact"] .fin-card,
+[data-density="compact"] .fin-card-elevated {
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+  border-radius: 10px !important;
+}
+
+[data-density="spacious"] .fin-card,
+[data-density="spacious"] .fin-card-elevated {
+  padding-top: 1.75rem !important;
+  padding-bottom: 1.75rem !important;
+  border-radius: 18px !important;
+}
+
+/* ============================================================
+   LIGHT MODE OVERRIDES
+   ============================================================ */
+[data-mode="light"] {
+  color-scheme: light;
+}
+
+[data-mode="light"] body {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+}
+
+[data-mode="light"] .text-white,
+[data-mode="light"] .text-slate-100 {
+  color: #0F172A !important;
+}
+
+[data-mode="light"] .text-slate-200,
+[data-mode="light"] .text-slate-300,
+[data-mode="light"] .text-slate-400 {
+  color: #475569 !important;
+}
+
+[data-mode="light"] .text-slate-500 {
+  color: #64748B !important;
+}
+
+[data-mode="light"] .fin-card,
+[data-mode="light"] .fin-card-elevated,
+[data-mode="light"] div[class*="bg-[#0E1422]"],
+[data-mode="light"] div[class*="bg-[#121828]"],
+[data-mode="light"] div[class*="bg-[#141C30]"],
+[data-mode="light"] div[class*="bg-slate-900"],
+[data-mode="light"] aside[class*="bg-[#0B0F18]"] {
+  background-color: #FFFFFF !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-mode="light"] .bg-slate-950,
+[data-mode="light"] div[class*="bg-[#080B11]"],
+[data-mode="light"] main[class*="bg-[#080B11]"] {
+  background-color: #F8FAFC !important;
+}
+
+[data-mode="light"] .border-white\/10,
+[data-mode="light"] .border-white\/20,
+[data-mode="light"] .border-white\/\[0\.06\],
+[data-mode="light"] .border-white\/\[0\.08\] {
+  border-color: rgba(0, 0, 0, 0.09) !important;
+}
+
+[data-mode="light"] input,
+[data-mode="light"] select {
+  background-color: #F1F5F9 !important;
+  color: #0F172A !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
 }

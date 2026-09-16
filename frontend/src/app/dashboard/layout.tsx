@@ -39,10 +39,22 @@ import {
   Database,
   ChevronDown,
   Settings,
+  Palette,
+  Sun,
+  Moon,
 } from "lucide-react";
 import CommandCenterModal from "@/components/dashboard/CommandCenterModal";
 import KeyboardShortcutsModal from "@/components/dashboard/KeyboardShortcutsModal";
-import { applyThemeToDocument, getStoredThemeSettings } from "@/lib/theme-store";
+import { 
+  applyThemeToDocument, 
+  getStoredThemeSettings, 
+  saveThemeSettings, 
+  THEME_PRESETS, 
+  ACCENT_PALETTES, 
+  ThemePreset, 
+  AccentColor, 
+  ThemeSettings 
+} from "@/lib/theme-store";
 
 interface NavGroup {
   group: string;
@@ -135,10 +147,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const notifRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const currencyRef = useRef<HTMLDivElement>(null);
+  const themeRef = useRef<HTMLDivElement>(null);
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState<ThemeSettings>(getStoredThemeSettings());
 
   useEffect(() => {
     loadUser();
-    applyThemeToDocument(getStoredThemeSettings());
+    const stored = getStoredThemeSettings();
+    setCurrentTheme(stored);
+    applyThemeToDocument(stored);
+
+    const handleThemeChange = (e: any) => {
+      if (e.detail) {
+        setCurrentTheme(e.detail);
+        applyThemeToDocument(e.detail);
+      }
+    };
+    window.addEventListener("finai:theme-change", handleThemeChange);
+    return () => window.removeEventListener("finai:theme-change", handleThemeChange);
   }, [loadUser]);
 
   useEffect(() => {
@@ -220,6 +246,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
       if (currencyRef.current && !currencyRef.current.contains(e.target as Node)) {
         setCurrencyMenuOpen(false);
+      }
+      if (themeRef.current && !themeRef.current.contains(e.target as Node)) {
+        setThemeMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClick);
@@ -507,6 +536,96 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       {currency === curCode && <span className="text-purple-400">✓</span>}
                     </button>
                   ))}
+                </div>
+              )}
+            </div>
+
+            {/* Quick Theme Switcher */}
+            <div className="relative" ref={themeRef}>
+              <button
+                type="button"
+                onClick={() => setThemeMenuOpen(!themeMenuOpen)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0E1422] border border-white/[0.06] text-xs font-medium text-slate-200 hover:border-white/[0.14] transition-colors cursor-pointer"
+                title="Theme & Appearance"
+              >
+                {currentTheme.mode === "light" ? (
+                  <Sun className="w-3.5 h-3.5 text-amber-400" />
+                ) : (
+                  <Palette className="w-3.5 h-3.5 text-purple-400" />
+                )}
+                <span className="hidden md:inline capitalize">{THEME_PRESETS[currentTheme.theme]?.name || "Theme"}</span>
+                <ChevronDown className="w-3 h-3 text-slate-500" />
+              </button>
+
+              {themeMenuOpen && (
+                <div className="absolute top-full right-0 mt-2 w-64 rounded-2xl bg-[#0E1422] border border-white/10 shadow-2xl z-60 p-3 space-y-3 animate-fin-fade">
+                  {/* Mode Selector */}
+                  <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
+                    <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider font-mono">Mode</span>
+                    <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-white/10">
+                      <button
+                        type="button"
+                        onClick={() => saveThemeSettings({ mode: "dark" })}
+                        className={`p-1.5 rounded-md transition cursor-pointer ${currentTheme.mode !== "light" ? "bg-purple-600 text-white shadow-sm" : "text-slate-400 hover:text-white"}`}
+                        title="Dark Mode"
+                      >
+                        <Moon className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => saveThemeSettings({ mode: "light" })}
+                        className={`p-1.5 rounded-md transition cursor-pointer ${currentTheme.mode === "light" ? "bg-purple-600 text-white shadow-sm" : "text-slate-400 hover:text-white"}`}
+                        title="Light Mode"
+                      >
+                        <Sun className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Preset Selector */}
+                  <div className="space-y-1.5">
+                    <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider font-mono block">Preset</span>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {Object.entries(THEME_PRESETS).map(([k, p]) => (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => saveThemeSettings({ theme: k as ThemePreset })}
+                          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition text-left cursor-pointer ${
+                            currentTheme.theme === k
+                              ? "bg-purple-600/20 text-purple-300 border border-purple-500/40"
+                              : "text-slate-300 hover:bg-white/[0.05] border border-transparent"
+                          }`}
+                        >
+                          <span className="w-2.5 h-2.5 rounded-full shrink-0 border border-white/20" style={{ backgroundColor: p.surface }} />
+                          <span className="truncate">{p.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Accent Selector */}
+                  <div className="space-y-1.5 pt-1 border-t border-white/[0.06]">
+                    <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider font-mono block">Accent</span>
+                    <div className="flex items-center justify-between gap-1.5">
+                      {Object.entries(ACCENT_PALETTES).map(([k, a]) => (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => saveThemeSettings({ accent: k as AccentColor })}
+                          title={a.label}
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center transition border cursor-pointer ${
+                            currentTheme.accent === k
+                              ? "border-white ring-2 ring-white/20 scale-105"
+                              : "border-transparent hover:border-white/30"
+                          }`}
+                          style={{ backgroundColor: a.primary }}
+                        >
+                          {currentTheme.accent === k && <span className="text-white text-[10px] font-bold">✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

@@ -30,7 +30,10 @@ import {
   Check,
   Eye,
   ArrowRight,
-  Info
+  Info,
+  Moon,
+  Sun,
+  Laptop
 } from 'lucide-react';
 import { 
   getStoredThemeSettings, 
@@ -241,6 +244,48 @@ export default function SettingsPage() {
                 <p className="text-xs text-slate-400 mt-0.5">
                   Customize the visual styling, darkness presets, accent colors, and interface density of your financial OS.
                 </p>
+              </div>
+
+              {/* Theme Mode: Dark / Light / System */}
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider font-mono">
+                  Theme Appearance Mode
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[
+                    { id: 'dark', label: 'Dark Mode', icon: Moon, desc: 'High-contrast dark palette' },
+                    { id: 'light', label: 'Light Mode', icon: Sun, desc: 'Clean bright daylight canvas' },
+                    { id: 'system', label: 'System Sync', icon: Laptop, desc: 'Follow OS preference' },
+                  ].map((m) => {
+                    const isSelected = themeSettings.mode === m.id;
+                    const Icon = m.icon;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => handleUpdateTheme({ mode: m.id as ThemeMode })}
+                        className={`p-3.5 rounded-2xl border text-left transition duration-150 relative cursor-pointer ${
+                          isSelected
+                            ? 'border-purple-500 bg-purple-500/10 shadow-lg shadow-purple-500/10'
+                            : 'border-white/10 bg-slate-900 hover:border-white/20'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 mb-1.5">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isSelected ? 'text-purple-400 bg-purple-500/20' : 'text-slate-400 bg-white/5'}`}>
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <span className="text-xs font-bold text-white">{m.label}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 leading-tight">{m.desc}</p>
+                        {isSelected && (
+                          <div className="absolute top-3 right-3 text-purple-400">
+                            <Check className="w-3.5 h-3.5" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Theme Presets */}
