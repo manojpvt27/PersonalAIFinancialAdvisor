@@ -68,23 +68,19 @@ export default function LoginPage() {
     clearError();
   };
 
-  // If user session check is actively running, show a clean, minimal loading state
-  if (isLoading && !isSubmitting) {
-    return (
-      <div className="min-h-screen w-full bg-[#080B11] flex flex-col items-center justify-center text-white space-y-4">
-        <div className="w-12 h-12 rounded-2xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 animate-pulse">
-          <Sparkles className="w-6 h-6" />
-        </div>
-        <div className="text-center space-y-1">
-          <h2 className="text-sm font-bold text-white tracking-tight">FinAI Pro</h2>
-          <p className="text-xs text-slate-400 font-mono flex items-center gap-1.5 justify-center">
-            <span className="w-2 h-2 rounded-full bg-purple-500 animate-ping" />
-            Checking your session...
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const handleInstantDemoLogin = async () => {
+    setLocalError(null);
+    clearError();
+    setIsSubmitting(true);
+    try {
+      await login('demo@finai.com', 'demo123456');
+      router.push('/dashboard');
+    } catch (err: any) {
+      setLocalError(err.message || 'Demo login failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const displayedError = localError || error;
 
@@ -102,23 +98,34 @@ export default function LoginPage() {
         </div>
 
         {/* 1-Click Demo Quick Fill Banner */}
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-purple-500/30 flex items-center justify-between gap-3 shadow-lg">
+        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-purple-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-7 h-7 rounded-lg bg-purple-500/15 text-purple-400 flex items-center justify-center shrink-0">
               <KeyRound className="w-4 h-4" />
             </div>
             <div className="truncate">
-              <span className="text-xs font-semibold text-white block">Demo Account Available</span>
+              <span className="text-xs font-semibold text-white block">Instant Demo Access</span>
               <span className="text-[11px] text-slate-400 font-mono">demo@finai.com / demo123456</span>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={fillDemoCredentials}
-            className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shrink-0 transition shadow-sm shadow-purple-500/30"
-          >
-            Auto-Fill
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={fillDemoCredentials}
+              className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition"
+            >
+              Fill
+            </button>
+            <button
+              type="button"
+              onClick={handleInstantDemoLogin}
+              disabled={isSubmitting}
+              className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition shadow-sm shadow-purple-500/30 flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Explore Demo</span>
+            </button>
+          </div>
         </div>
 
         {/* Error Alert */}
@@ -248,8 +255,9 @@ export default function LoginPage() {
         <div className="space-y-2.5">
           <button
             type="button"
-            onClick={fillDemoCredentials}
-            className="w-full h-12 rounded-xl bg-[#0E1422] hover:bg-slate-800 border border-white/10 text-xs font-medium text-slate-200 flex items-center justify-center gap-3 transition duration-150 cursor-pointer"
+            onClick={handleInstantDemoLogin}
+            disabled={isSubmitting}
+            className="w-full h-12 rounded-xl bg-[#0E1422] hover:bg-slate-800 border border-white/10 text-xs font-medium text-slate-200 flex items-center justify-center gap-3 transition duration-150 cursor-pointer disabled:opacity-50"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path
