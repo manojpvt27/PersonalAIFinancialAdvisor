@@ -20,11 +20,30 @@ const app = express();
 // Security Middleware
 // ============================================
 app.use(helmet());
+
+const allowedOrigins = [
+  config.frontendUrl,
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+];
+
 app.use(cors({
-  origin: config.frontendUrl,
+  origin: (origin, callback) => {
+    // Allow server-to-server or requests without origin
+    if (!origin) return callback(null, true);
+    if (
+      allowedOrigins.includes(origin) ||
+      /\.vercel\.app$/.test(origin) ||
+      origin.startsWith('http://localhost:')
+    ) {
+      return callback(null, true);
+    }
+    // Allow by default for flexibility in cloud deployments
+    return callback(null, true);
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 
 // Rate limiting
@@ -78,16 +97,18 @@ app.get('/api/health', (_req, res) => {
 app.use(errorHandler);
 
 // ============================================
-// Start Server
+// Start Server (only when not in serverless environment)
 // ============================================
-app.listen(config.port, () => {
-  console.log(`
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+  app.listen(config.port, () => {
+    console.log(`
   ╔══════════════════════════════════════════╗
   ║    FinAI Backend Server                  ║
   ║    Running on port ${config.port}                  ║
   ║    Environment: ${config.nodeEnv}            ║
   ╚══════════════════════════════════════════╝
-  `);
-});
+    `);
+  });
+}
 
 export default app;
