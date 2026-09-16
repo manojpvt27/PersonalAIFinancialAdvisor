@@ -1,0 +1,226 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// User & Authentication
+// ============================================
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String?   @map("password_hash")
+  name          String
+  avatarUrl     String?   @map("avatar_url")
+  googleId      String?   @unique @map("google_id")
+  role          String    @default("user") // "user" | "admin"
+  currency      String    @default("INR")
+  preferences   String    @default("{}") // JSON string for preferences
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  expenses      Expense[]
+  incomes       Income[]
+  budgets       Budget[]
+  goals         Goal[]
+  notifications Notification[]
+  chatMessages  ChatMessage[]
+  auditLogs     AuditLog[]
+  resetTokens   PasswordResetToken[]
+
+  @@map("users")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+// ============================================
+// Expense Tracking
+// ============================================
+
+model Expense {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  amount           Float
+  category         String
+  date             DateTime
+  paymentMethod    String   @default("cash") @map("payment_method")
+  description      String   @default("")
+  tags             String   @default("[]") // JSON array of tags
+  notes            String   @default("")
+  isRecurring      Boolean  @default(false) @map("is_recurring")
+  recurrencePattern String? @map("recurrence_pattern") // "daily" | "weekly" | "monthly" | "yearly"
+  receiptUrl       String?  @map("receipt_url")
+  aiCategory       String?  @map("ai_category")
+  aiConfidence     Float?   @map("ai_confidence")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([userId, category])
+  @@map("expenses")
+}
+
+// ============================================
+// Income Management
+// ============================================
+
+model Income {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  amount           Float
+  source           String   // "salary" | "freelance" | "investment" | "side_hustle" | "other"
+  type             String   @default("one-time") // "one-time" | "recurring"
+  date             DateTime
+  description      String   @default("")
+  isRecurring      Boolean  @default(false) @map("is_recurring")
+  recurrencePattern String? @map("recurrence_pattern")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@map("incomes")
+}
+
+// ============================================
+// Budget Management
+// ============================================
+
+model Budget {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  category       String   // "overall" or specific category
+  limitAmount    Float    @map("limit_amount")
+  period         String   @default("monthly") // "weekly" | "monthly" | "yearly"
+  startDate      DateTime @map("start_date")
+  endDate        DateTime @map("end_date")
+  alertEnabled   Boolean  @default(true) @map("alert_enabled")
+  alertThreshold Int      @default(80) @map("alert_threshold") // percentage
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, category])
+  @@map("budgets")
+}
+
+// ============================================
+// Financial Goals
+// ============================================
+
+model Goal {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  name          String
+  type          String   // "emergency_fund" | "vacation" | "purchase" | "investment" | "custom"
+  targetAmount  Float    @map("target_amount")
+  currentAmount Float    @default(0) @map("current_amount")
+  targetDate    DateTime @map("target_date")
+  status        String   @default("in_progress") // "in_progress" | "completed" | "paused" | "cancelled"
+  icon          String   @default("🎯")
+  color         String   @default("#14B8A6")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  contributions GoalContribution[]
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("goals")
+}
+
+model GoalContribution {
+  id        String   @id @default(uuid())
+  goalId    String   @map("goal_id")
+  amount    Float
+  note      String   @default("")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@map("goal_contributions")
+}
+
+// ============================================
+// Notifications
+// ============================================
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  type      String   // "budget_alert" | "goal_reminder" | "bill_reminder" | "overspending" | "weekly_summary"
+  title     String
+  message   String
+  isRead    Boolean  @default(false) @map("is_read")
+  data      String   @default("{}") // JSON metadata
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// ============================================
+// AI Chat Messages
+// ============================================
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  role      String   // "user" | "assistant" | "system"
+  content   String
+  metadata  String   @default("{}") // JSON metadata
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("chat_messages")
+}
+
+// ============================================
+// Audit Logging
+// ============================================
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  action     String   // "create" | "update" | "delete" | "login" | "logout"
+  entityType String   @map("entity_type") // "expense" | "income" | "budget" | "goal" | "user"
+  entityId   String?  @map("entity_id")
+  changes    String   @default("{}") // JSON diff
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
